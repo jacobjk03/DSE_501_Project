@@ -56,15 +56,8 @@ DSE_Project/
 - Tips provided in 76% of trips (mean: $3.34)
 - Three main vendors with Vendor 2 handling 75.4% of trips
 
-## Team Members
-- Jacob Kuriakose (ASU ID: 1233481797)
-- [Member 2 Name (ASU ID)]
-- [Member 3 Name (ASU ID)]
-- [Member 4 Name (ASU ID)]
-
 ## Requirements
 - Python 3.8+
-- 8GB+ RAM (recommended for large dataset)
 - Jupyter Notebook
 
 ## Note
