@@ -39,17 +39,47 @@ Identifies and quantifies data quality issues:
   - Invalid passenger counts
 
 ### 4. Data Cleaning and Preprocessing
-Systematic data cleaning process:
+Systematic data cleaning process aligned with team standards:
 
-1. **Date Filtering**: Retain only trips from January 2024
+1. **Date Filtering**: 
+   - Retain trips from January 2024
+   - Include New Year transition trips (Dec 31, 2023 23:00+ to Jan 1, 2024 00:00)
+   - Remove abnormal year entries (2002, 2009) due to taximeter malfunctions
+
 2. **Duration Filtering**: Remove trips with invalid durations (≤ 0 or > 180 minutes)
-3. **Financial Filtering**: Remove negative fares, tips, and total amounts
-4. **Fare Capping**: Remove unrealistic fares (> $500)
-5. **Distance Filtering**: Keep only trips with distance > 0 and ≤ 100 miles
-6. **Passenger Count**: Fill missing values with median, keep only 1-6 passengers
-7. **Missing Value Imputation**: Fill remaining missing values appropriately
 
-**Result**: Clean dataset with ~95% of original records retained
+3. **Refund/Reversal Pair Removal**:
+   - Identify negative `total_amount` records (35,504+ records)
+   - Find matching positive records of same amount
+   - Remove BOTH negative and positive pairs to avoid double-counting
+   - Ensures analysis reflects only real transactions
+
+4. **Financial Filtering**: 
+   - Remove remaining negative fares, tips, and total amounts
+   - Cap unrealistic fares (> $500)
+
+5. **Distance Filtering**: Keep only trips with distance > 0 and ≤ 100 miles
+
+6. **Sophisticated Passenger Count Handling** (4-group approach):
+   - **Group 1**: `total_amount=0` AND `trip_distance=0` → **Remove** (system/human errors)
+   - **Group 2**: `total_amount=0` AND `trip_distance≠0` → **Remove** (system/human errors)
+   - **Group 3**: `total_amount≠0` AND `trip_distance=0` → **Keep** (E-Hail/Flex Fare trips)
+   - **Group 4**: `total_amount≠0` AND `trip_distance≠0` → **Keep** (E-Hail/Flex Fare trips)
+   - Fill remaining missing values with median, keep only 1-6 passengers
+   - Rationale: E-Hail apps may not transmit passenger_count to TLC system
+
+7. **RatecodeID**: Fill missing values with `99` (Null/Unknown per TLC standard)
+
+8. **Store_and_fwd_flag**: Fill with `N` (technical field, no impact on analysis)
+
+9. **Congestion_surcharge**: Fill with `0` (trips outside congestion zone/time)
+
+10. **Airport_fee** (Location-based imputation):
+    - Identify pickups at LaGuardia (zone 138) or JFK (zone 132)
+    - Fill with `$1.70` for airport pickups
+    - Fill with `0` for all other locations
+
+**Result**: Clean dataset with ~95% of original records retained, following TLC data standards
 
 ### 5. Feature Engineering
 Creates derived features for analysis:
@@ -115,21 +145,27 @@ Comprehensive summary statistics including:
 
 ## Data Quality Improvements
 
-### Issues Identified (from original data_exploration.ipynb):
-1. ✓ Trips outside January 2024 date range
-2. ✓ Negative trip durations
-3. ✓ Negative fare amounts (~37,448 trips)
-4. ✓ Unrealistic fare amounts (> $500)
-5. ✓ Zero or unrealistic distances
-6. ✓ Missing values in passenger_count, RatecodeID, etc. (~4.73%)
-7. ✓ Invalid passenger counts (0 or > 6)
+### Issues Identified and Addressed:
+1. ✓ **Abnormal timestamps**: Removed 2002/2009 entries, kept New Year transition trips
+2. ✓ **Negative trip durations**: Removed invalid temporal data
+3. ✓ **Refund/reversal pairs**: Identified and removed 35,504+ negative records + matching positives
+4. ✓ **Unrealistic fares**: Capped at $500, removed negative amounts
+5. ✓ **Zero/unrealistic distances**: Filtered appropriately, kept valid E-Hail trips
+6. ✓ **Missing passenger_count** (~140,162 records): 
+   - Sophisticated 4-group handling
+   - E-Hail/Flex Fare trip recognition
+   - Domain-aware imputation
+7. ✓ **Missing RatecodeID**: Filled with 99 (TLC standard for Null/Unknown)
+8. ✓ **Missing Airport_fee**: Location-based imputation using pickup zones
+9. ✓ **Missing congestion_surcharge**: Filled with 0 (outside zone/time)
+10. ✓ **Invalid passenger counts**: Kept only 1-6 passengers
 
-### All Issues Addressed:
-- Filtered to valid January 2024 trips only
-- Removed all invalid financial values
-- Capped extreme outliers
-- Imputed missing values appropriately
-- Created clean, analysis-ready dataset
+### Team Alignment:
+- Follows approach documented in "Initial Data Cleaning.docx"
+- Implements TLC data dictionary standards
+- Recognizes E-Hail/Flex Fare trip characteristics
+- Uses domain knowledge for intelligent imputation
+- Ensures data integrity for statistical analysis
 
 ## Next Steps
 The cleaned dataset is now ready for:

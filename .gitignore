@@ -244,3 +244,4 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/python,macos,windows,jupyternotebooksyellow_tripdata_2024-01_cleaned.parquet
+yellow_tripdata_2024-01_cleaned.parquet
